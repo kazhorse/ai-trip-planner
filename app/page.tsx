@@ -24,6 +24,7 @@ export default function Home() {
           旅行プラン作成
         </button>
       </main>
-    </div>
+      </div>
   );
 }
+
