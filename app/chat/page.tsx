@@ -57,7 +57,7 @@ export default function Home() {
 
   // プランを作成ボタン → resultに移動
   const handleCreatePlan = () => {
-    router.push('/result');
+    router.push('/plan');
   };
 
   // メッセージ送信処理
@@ -82,7 +82,7 @@ export default function Home() {
 
     if (currentQuestionIndex === questions.length) {
       setTimeout(() => {
-        router.push('/result'); 
+        router.push('/plan'); 
       }, 500);
     }
 
