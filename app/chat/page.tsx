@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Modal from "../../components/modal"; 
+import Modal from "../../components/modal";
 
 const questions = [
   "どこから出発しますか？",
@@ -11,17 +11,18 @@ const questions = [
   "旅行の予算はどれくらいですか？",
   "出発日時と帰宅日時、もしくは日帰りか何泊するかを教えてください？",
   "どの交通手段を使う予定ですか？（飛行機、電車、バス、車 など）",
-  "誰と一緒に旅行しますか？（一人、友達、家族、恋人 など）"
+  "誰と一緒に旅行しますか？（一人、友達、家族、恋人 など）",
 ];
 
 export default function Home() {
-  const [messages, setMessages] = useState<{ sender: "user" | "bot"; text: string }[]>([
-    { sender: "bot", text: questions[0] }
-  ]);
+  const [messages, setMessages] = useState<
+    { sender: "user" | "bot"; text: string }[]
+  >([{ sender: "bot", text: questions[0] }]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(1);
   const [input, setInput] = useState("");
   const [inputHeight, setInputHeight] = useState(80);
   const [showModal, setShowModal] = useState(false);
+  const [userResponses, setUserResponses] = useState<string[]>([]);
 
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -55,60 +56,83 @@ export default function Home() {
   // モーダルを閉じる
   const handleCloseModal = () => setShowModal(false);
 
-  // プランを作成ボタン → resultに移動
+  // ✅ プラン生成ボタン → /plan に質問と回答のペアを送信
   const handleCreatePlan = () => {
-    router.push('/plan');
+    const qaPairs = questions
+      .slice(0, userResponses.length)
+      .map((question, index) => ({
+        question,
+        answer: userResponses[index] || "",
+      }));
+
+    router.push(
+      `/plan?qaPairs=${encodeURIComponent(JSON.stringify(qaPairs))}`
+    );
   };
 
-  // メッセージ送信処理
+  // ✅ メッセージ送信処理
   const handleSendMessage = () => {
     if (input.trim() === "") return;
 
     // ユーザーのメッセージを表示
     setMessages((prev) => [
       ...prev,
-      { sender: "user", text: input.trim() }
+      { sender: "user", text: input.trim() },
     ]);
 
+    // ユーザーの回答を保存
+    const updatedResponses = [...userResponses, input.trim()];
+    setUserResponses(updatedResponses);
+
+    // ✅ 質問が残っている場合、次の質問を表示
     if (currentQuestionIndex < questions.length) {
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
-          { sender: "bot", text: questions[currentQuestionIndex] }
+          { sender: "bot", text: questions[currentQuestionIndex] },
         ]);
         setCurrentQuestionIndex((prev) => prev + 1);
       }, 500);
-    }
+    } else {
+      // ✅ すべての質問が終わった場合、自動で /plan へ遷移
+      const qaPairs = questions.map((question, index) => ({
+        question,
+        answer: updatedResponses[index] || "",
+      }));
 
-    if (currentQuestionIndex === questions.length) {
       setTimeout(() => {
-        router.push('/plan'); 
+        router.push(
+          `/plan?qaPairs=${encodeURIComponent(JSON.stringify(qaPairs))}`
+        );
       }, 500);
     }
 
-    setInput("");
+    // ✅ 入力フィールドをクリア
+    setTimeout(() => {
+      setInput("");
+    }, 10);
   };
 
   return (
-    <div className="flex items-center justify-center h-screen" style={{ backgroundColor: "#e0f7fa" }} >
+    <div
+      className="flex items-center justify-center h-screen"
+      style={{ backgroundColor: "#e0f7fa" }}
+    >
       <div className="w-full max-w-md bg-white shadow-lg flex flex-col">
         {/* チャットエリア */}
         <div className="w-full max-w-md h-full bg-white shadow-lg">
-
           {/* ヘッダー */}
           <div className="p-2 flex items-center border-b border-gray-300">
-            <Image 
-              src="/AIbot.png" 
+            <Image
+              src="/AIbot.png"
               alt="Bot"
               width={48}
               height={48}
               className="rounded-full mr-2 w-12 h-12"
             />
-            <h1 className="text-2xl font-bold">
-              AI旅行プランナー
-            </h1>
-            <button 
-              onClick={handleOpenModal} 
+            <h1 className="text-2xl font-bold">AI旅行プランナー</h1>
+            <button
+              onClick={handleOpenModal}
               className="ml-auto bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
             >
               プランを作成
@@ -123,7 +147,12 @@ export default function Home() {
             }}
           >
             {messages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2`}>
+              <div
+                key={index}
+                className={`flex ${
+                  msg.sender === "user" ? "justify-end" : "justify-start"
+                } mb-2`}
+              >
                 {msg.sender === "bot" && (
                   <Image
                     src="/AIbot.png"
@@ -133,7 +162,13 @@ export default function Home() {
                     className="rounded-full mr-2 w-10 h-10 flex-shrink-0"
                   />
                 )}
-                <div className={`p-2 rounded-lg ${msg.sender === "user" ? "bg-[#dcf8c6] text-black" : "bg-blue-100 text-gray-900"}`}>
+                <div
+                  className={`p-2 rounded-lg ${
+                    msg.sender === "user"
+                      ? "bg-[#dcf8c6] text-black"
+                      : "bg-blue-100 text-gray-900"
+                  }`}
+                >
                   {msg.text}
                 </div>
               </div>
@@ -142,7 +177,10 @@ export default function Home() {
           </div>
 
           {/* 入力エリア */}
-          <div ref={inputContainerRef} className="p-2 border-t border-gray-300 flex items-center">
+          <div
+            ref={inputContainerRef}
+            className="p-2 border-t border-gray-300 flex items-center"
+          >
             <input
               type="text"
               value={input}
@@ -153,7 +191,7 @@ export default function Home() {
               placeholder="メッセージを入力..."
               className="flex-1 p-2 border border-blue-300 rounded-lg focus:outline-none focus:border-blue-500"
             />
-            <button 
+            <button
               onClick={handleSendMessage}
               className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
             >
@@ -162,13 +200,13 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ポップアップ */}
+        {/* モーダル */}
         <Modal
           isOpen={showModal}
           onClose={handleCloseModal}
           onConfirm={handleCreatePlan}
         />
-      </div> 
+      </div>
     </div>
   );
 }

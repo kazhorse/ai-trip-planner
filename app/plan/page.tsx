@@ -1,64 +1,77 @@
-// app/plan/page.tsx
-'use client'; // クライアントコンポーネントとして設定
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import styles from '../../styles/Plan.module.css';
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function Plan() {
-  const router = useRouter();
-  
-  // 旅行プランのデータ（仮）
-  const destination = "沖縄";
-  const schedule = [
-    { day: 1, activity: "到着・国際通り散策" },
-    { day: 2, activity: "美ら海水族館 & 古宇利島観光" },
-    { day: 3, activity: "首里城 & ひめゆりの塔見学" },
-    { day: 4, activity: "ビーチリゾートでのんびり" },
-    { day: 5, activity: "お土産購入・帰宅" }
-  ];
+  const searchParams = useSearchParams();
+  const router = useRouter(); // ✅ 追加
+  const [plan, setPlan] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Google カレンダー用のURL生成
-  const handleAddToCalendar = () => {
-    const baseUrl = "https://www.google.com/calendar/render?action=TEMPLATE";
-    const text = `沖縄旅行プラン`;
-    const details = schedule.map((item) => `Day ${item.day}: ${item.activity}`).join("%0A");
-    const location = destination;
-    const startDate = "20250401"; // 仮の日程 YYYYMMDD
-    const endDate = "20250405"; // 仮の日程 YYYYMMDD
+  // ✅ URL から質問と回答のペアを取得
+  const qaPairsParam = searchParams.get("qaPairs");
+  const qaPairs = qaPairsParam
+    ? JSON.parse(decodeURIComponent(qaPairsParam))
+    : [];
 
-    const googleCalendarUrl = `${baseUrl}&text=${encodeURIComponent(text)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}&dates=${startDate}/${endDate}`;
-    
-    window.open(googleCalendarUrl, "_blank");
+  useEffect(() => {
+    const fetchPlan = async () => {
+      try {
+        // ✅ API に qaPairs を送信
+        const res = await fetch("/chat/api", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ qaPairs }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setPlan(data.response);
+        } else {
+          setError("API からのプラン生成に失敗しました。");
+        }
+      } catch (error) {
+        console.error("API エラー:", error);
+        setError("プラン生成中にエラーが発生しました。");
+      }
+    };
+
+    if (qaPairs.length > 0) {
+      fetchPlan(); // ✅ API を呼び出して仮プラン生成
+    }
+  }, [qaPairs]);
+
+  // ✅ トップに戻るボタンのクリック処理
+  const handleGoHome = () => {
+    router.push("/"); // ✅ トップページへ遷移
   };
 
   return (
-    <div className={styles.container}>
-      {/* ヘッダー */}
-      <header className={styles.header}>
-        <h1 className={styles.title}>旅行プラン提案</h1>
-        <button className={styles.button} onClick={() => router.push('/')}>
-          ホームに戻る
-        </button>
-      </header>
+    <div
+      className="flex items-center justify-center h-screen bg-[#e0f7fa]" // ✅ 元の背景色
+    >
+      <div className="w-full max-w-lg bg-white p-6 shadow-lg rounded-lg">
+        <h1 className="text-2xl font-bold mb-4">旅行プラン</h1>
 
-      {/* メインコンテンツ */}
-      <main className={styles.content}>
-        <h2>こんな旅行プランはいかがですか？</h2>
-        <h3>行先: {destination}</h3>
-        
-        <ul className={styles.schedule}>
-          {schedule.map((item) => (
-            <li key={item.day}>
-              <strong>Day {item.day}:</strong> {item.activity}
-            </li>
-          ))}
-        </ul>
+        {error ? (
+          <p className="text-red-500 mb-4">{error}</p>
+        ) : plan ? (
+          <p className="text-lg whitespace-pre-line mb-4">{plan}</p>
+        ) : (
+          <p className="text-lg text-gray-500 mb-4">プランを生成中...</p>
+        )}
 
-        <button className={styles.addCalendarButton} onClick={handleAddToCalendar}>
-          Google カレンダーに追加
+        {/* ✅ トップに戻るボタン */}
+        <button
+          onClick={handleGoHome}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+        >
+          トップに戻る
         </button>
-      </main>
+      </div>
     </div>
   );
 }
