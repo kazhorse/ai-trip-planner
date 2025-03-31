@@ -20,7 +20,7 @@ export default function Home() {
       {/* メインコンテンツ */}
       <main>
         <p>旅行プランを作成しましょう！</p>
-        <button className={styles.planButton} onClick={() => router.push('/plan')}>
+        <button className={styles.planButton} onClick={() => router.push('/chat')}>
           旅行プラン作成
         </button>
       </main>
