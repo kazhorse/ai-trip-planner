@@ -90,7 +90,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-200">
+    <div className="flex items-center justify-center h-screen" style={{ backgroundColor: "#e0f7fa" }} >
       <div className="w-full max-w-md bg-white shadow-lg flex flex-col">
         {/* チャットエリア */}
         <div className="w-full max-w-md h-full bg-white shadow-lg">
