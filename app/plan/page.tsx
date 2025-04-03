@@ -42,7 +42,7 @@ export default function Plan() {
     if (qaPairs.length > 0) {
       fetchPlan(); // ✅ API を呼び出して仮プラン生成
     }
-  }, [qaPairs]);
+  }, []);
 
   // ✅ トップに戻るボタンのクリック処理
   const handleGoHome = () => {
@@ -50,21 +50,18 @@ export default function Plan() {
   };
 
   return (
-    <div
-      className="flex items-center justify-center h-screen bg-[#e0f7fa]" // ✅ 元の背景色
-    >
+    <div className="min-h-screen bg-[#e0f7fa] flex items-center justify-center py-8 px-4 overflow-auto">
       <div className="w-full max-w-lg bg-white p-6 shadow-lg rounded-lg">
         <h1 className="text-2xl font-bold mb-4">旅行プラン</h1>
-
+  
         {error ? (
           <p className="text-red-500 mb-4">{error}</p>
         ) : plan ? (
-          <p className="text-lg whitespace-pre-line mb-4">{plan}</p>
+          <pre className="text-lg whitespace-pre-wrap mb-4">{plan}</pre>
         ) : (
           <p className="text-lg text-gray-500 mb-4">プランを生成中...</p>
         )}
-
-        {/* ✅ トップに戻るボタン */}
+  
         <button
           onClick={handleGoHome}
           className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
@@ -74,4 +71,5 @@ export default function Plan() {
       </div>
     </div>
   );
+  
 }
