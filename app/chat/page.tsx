@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Modal from "../../components/modal";
+import EndModal from "../../components/endmodal";
 
 const questions = [
   "どこから出発しますか？",
@@ -12,6 +13,12 @@ const questions = [
   "出発日時と帰宅日時、もしくは日帰りか何泊するかを教えてください？",
   "どの交通手段を使う予定ですか？（飛行機、電車、バス、車 など）",
   "誰と一緒に旅行しますか？（一人、友達、家族、恋人 など）",
+  "長時間の移動は苦になりませんか、それともできるだけ移動は少なくしたいですか？",
+  "美味しいものを食べたいですか、それとも観光メインがいいですか？",
+  "今の気分に合う旅行は、のんびり過ごすのとアクティブに動くのどっちがいいですか？",
+  "日常から離れてリフレッシュしたいですか、それとも新しい刺激を求めていますか？",
+  "旅の雰囲気は、静かで落ち着いた感じと、ワクワクする賑やかな感じのどちらが理想ですか？",
+  "最近、疲れていますか、それとも体を動かしてリフレッシュしたい気分ですか？",
 ];
 
 export default function Home() {
@@ -22,13 +29,13 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [inputHeight, setInputHeight] = useState(80);
   const [showModal, setShowModal] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false);
   const [userResponses, setUserResponses] = useState<string[]>([]);
 
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // 入力欄の高さをリアルタイム調整
   useEffect(() => {
     if (inputContainerRef.current) {
       const resizeObserver = new ResizeObserver(() => {
@@ -36,78 +43,47 @@ export default function Home() {
           setInputHeight(inputContainerRef.current.clientHeight);
         }
       });
-
       resizeObserver.observe(inputContainerRef.current);
-
       return () => resizeObserver.disconnect();
     }
   }, []);
 
-  // 最新メッセージに自動スクロール
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [messages]);
 
-  // モーダルを開く
   const handleOpenModal = () => setShowModal(true);
-
-  // モーダルを閉じる
   const handleCloseModal = () => setShowModal(false);
+  const handleCloseEndModal = () => setShowEndModal(false);
 
-  // ✅ プラン生成ボタン → /plan に質問と回答のペアを送信
   const handleCreatePlan = () => {
-    const qaPairs = questions
-      .slice(0, userResponses.length)
-      .map((question, index) => ({
-        question,
-        answer: userResponses[index] || "",
-      }));
-
-    router.push(
-      `/plan?qaPairs=${encodeURIComponent(JSON.stringify(qaPairs))}`
-    );
+    const qaPairs = questions.slice(0, userResponses.length).map((question, index) => ({
+      question,
+      answer: userResponses[index] || "",
+    }));
+    router.push(`/plan?qaPairs=${encodeURIComponent(JSON.stringify(qaPairs))}`);
   };
 
-  // ✅ メッセージ送信処理
   const handleSendMessage = () => {
     if (input.trim() === "") return;
 
-    // ユーザーのメッセージを表示
-    setMessages((prev) => [
-      ...prev,
-      { sender: "user", text: input.trim() },
-    ]);
-
-    // ユーザーの回答を保存
+    setMessages((prev) => [...prev, { sender: "user", text: input.trim() }]);
     const updatedResponses = [...userResponses, input.trim()];
     setUserResponses(updatedResponses);
 
-    // ✅ 質問が残っている場合、次の質問を表示
     if (currentQuestionIndex < questions.length) {
       setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: questions[currentQuestionIndex] },
-        ]);
+        setMessages((prev) => [...prev, { sender: "bot", text: questions[currentQuestionIndex] }]);
         setCurrentQuestionIndex((prev) => prev + 1);
       }, 500);
     } else {
-      // ✅ すべての質問が終わった場合、自動で /plan へ遷移
-      const qaPairs = questions.map((question, index) => ({
-        question,
-        answer: updatedResponses[index] || "",
-      }));
-
       setTimeout(() => {
-        router.push(
-          `/plan?qaPairs=${encodeURIComponent(JSON.stringify(qaPairs))}`
-        );
+        setShowEndModal(true);
       }, 500);
     }
 
-    // ✅ 入力フィールドをクリア
     setTimeout(() => {
       setInput("");
     }, 10);
@@ -119,7 +95,7 @@ export default function Home() {
       style={{ backgroundColor: "#e0f7fa" }}
     >
       <div className="w-full max-w-md bg-white shadow-lg flex flex-col">
-        {/* チャットエリア */}
+        {/* チャット全体 */}
         <div className="w-full max-w-md h-full bg-white shadow-lg">
           {/* ヘッダー */}
           <div className="p-2 flex items-center border-b border-gray-300">
@@ -139,7 +115,7 @@ export default function Home() {
             </button>
           </div>
 
-          {/* チャットエリア */}
+          {/* メッセージリスト */}
           <div
             className="overflow-y-auto p-4"
             style={{
@@ -149,9 +125,7 @@ export default function Home() {
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                } mb-2`}
+                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2`}
               >
                 {msg.sender === "bot" && (
                   <Image
@@ -176,7 +150,7 @@ export default function Home() {
             <div ref={messagesEndRef}></div>
           </div>
 
-          {/* 入力エリア */}
+          {/* 入力欄 */}
           <div
             ref={inputContainerRef}
             className="p-2 border-t border-gray-300 flex items-center"
@@ -200,12 +174,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* モーダル */}
-        <Modal
-          isOpen={showModal}
-          onClose={handleCloseModal}
-          onConfirm={handleCreatePlan}
-        />
+        {/* モーダルたち */}
+        <Modal isOpen={showModal} onClose={handleCloseModal} onConfirm={handleCreatePlan} />
+        <EndModal isOpen={showEndModal} onClose={handleCloseEndModal} onConfirm={handleCreatePlan} />
       </div>
     </div>
   );
