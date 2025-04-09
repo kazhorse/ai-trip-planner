@@ -100,7 +100,7 @@ export default function Home() {
           {/* ヘッダー */}
           <div className="p-2 flex items-center border-b border-gray-300">
             <Image
-              src="/AIbot.png"
+              src="/odango.png"
               alt="Bot"
               width={48}
               height={48}
@@ -129,7 +129,7 @@ export default function Home() {
               >
                 {msg.sender === "bot" && (
                   <Image
-                    src="/AIbot.png"
+                    src="/odango.png"
                     alt="Bot"
                     width={40}
                     height={40}
