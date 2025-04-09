@@ -16,7 +16,7 @@ export default function Home() {
           {/* AIbotの画像を表示 */}
           <div className="mb-6">
             <Image
-              src="/AIbot.png"
+              src="/odango.png"
               alt="AIボット"
               width={300}
               height={300}
