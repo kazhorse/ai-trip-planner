@@ -5,7 +5,7 @@ export async function POST(req: Request) {
   const { message } = await req.json();
 
   // ✅ cookies に型を明示して get メソッドを補完
-  const cookieStore = cookies() as RequestCookies;
+  const cookieStore = cookies() as unknown as RequestCookies;
   const userId = cookieStore.get("lineUserId")?.value;
 
   if (!userId) {

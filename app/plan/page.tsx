@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function Plan() {
+ function Plan() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [plan, setPlan] = useState<string | null>(null);
@@ -95,4 +95,11 @@ export default function Plan() {
       </div>
     </div>
   );
+}
+export default function PlanPage() {
+  return(
+    <Suspense>
+      <Plan />
+    </Suspense>
+  )
 }
